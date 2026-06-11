@@ -1,5 +1,7 @@
 [![NuGet](https://img.shields.io/nuget/v/Heleket.Sdk.svg)](https://www.nuget.org/packages/Heleket.Sdk)
 
+!!!NOT OFFICIAL CLIENT!!!
+
 Current release: v1.0.1
 
 Implemented:
