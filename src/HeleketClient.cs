@@ -1,3 +1,4 @@
+using Flurl.Http.Configuration;
 using Heleket.Options;
 using Heleket.Internal;
 using Heleket.Payments;
@@ -10,32 +11,28 @@ namespace Heleket;
 /// </summary>
 public sealed class HeleketClient : IHeleketClient
 {
+    private static readonly IFlurlClientCache DefaultClientCache = new FlurlClientCache();
+
     /// <summary>
-    /// Creates a client using a new <see cref="HttpClient"/> instance.
+    /// Creates a client using Flurl for HTTP requests.
     /// </summary>
     /// <param name="options">The Heleket SDK options.</param>
     public HeleketClient(HeleketOptions options)
-        : this(options, new HttpClient())
+        : this(options, DefaultClientCache, new HeleketSigner(), new HeleketWebhookValidator(new HeleketSigner()))
     {
     }
 
-    /// <summary>
-    /// Creates a client using the supplied <see cref="HttpClient"/>.
-    /// </summary>
-    /// <param name="options">The Heleket SDK options.</param>
-    /// <param name="httpClient">The HTTP client used to send API requests.</param>
-    public HeleketClient(HeleketOptions options, HttpClient httpClient)
-        : this(options, httpClient, new HeleketSigner(), new HeleketWebhookValidator(new HeleketSigner()))
-    {
-    }
-
-    internal HeleketClient(HeleketOptions options, HttpClient httpClient, IHeleketSigner signer, IHeleketWebhookValidator webhookValidator)
+    internal HeleketClient(
+        HeleketOptions options,
+        IFlurlClientCache clientCache,
+        IHeleketSigner signer,
+        IHeleketWebhookValidator webhookValidator)
     {
         ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(httpClient);
+        ArgumentNullException.ThrowIfNull(clientCache);
         options.Validate();
 
-        var sender = new HeleketHttpSender(httpClient, options, signer);
+        var sender = new HeleketHttpSender(clientCache, options, signer);
         Payments = new HeleketPaymentsClient(sender);
         Webhooks = new HeleketWebhooksClient(options, webhookValidator);
     }

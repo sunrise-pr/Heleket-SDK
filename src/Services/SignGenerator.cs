@@ -1,13 +1,10 @@
-﻿using Heleket.Models;
+using Heleket.Models;
 using Heleket.Internal;
 using Newtonsoft.Json;
 using System.Net;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Encodings.Web;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Heleket.Services
 {
@@ -45,11 +42,9 @@ namespace Heleket.Services
                     if (value != null)
                     {
                         // Get the JSON property name from the attribute, default to property name if attribute not found
-                        var jsonPropertyNameAttr = prop.GetCustomAttribute<JsonPropertyNameAttribute>();
-                        string jsonName = jsonPropertyNameAttr?.Name ?? prop.Name;
+                        var jsonPropertyNameAttr = prop.GetCustomAttribute<JsonPropertyAttribute>();
+                        string jsonName = jsonPropertyNameAttr?.PropertyName ?? prop.Name;
 
-                        // Special handling for List<CurrencyInfo> to ensure consistent serialization if needed
-                        // (Default System.Text.Json serialization should be okay here)
                         propertiesToInclude.Add(jsonName, value);
                     }
                 }
@@ -63,17 +58,7 @@ namespace Heleket.Services
                     return string.Empty;
                 }
 
-                // 4. Serialize the sorted dictionary to JSON
-                var jsonOptions = new JsonSerializerOptions
-                {
-                    // Match PHP's JSON_UNESCAPED_UNICODE behavior
-                    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                    // Ensure compact output without indentation
-                    WriteIndented = false,
-                    // Important: Ensure the serializer respects the dictionary order (default behavior)
-                    // PropertyNamingPolicy = null // Not needed for Dictionary<string, object>
-                };
-                return System.Text.Json.JsonSerializer.Serialize(propertiesToInclude, jsonOptions);
+                return HeleketJson.Serialize(propertiesToInclude);
 
                 // 5. Base64 encode the JSON string (using UTF-8)
 
@@ -186,18 +171,7 @@ namespace Heleket.Services
             {
                 // 1. & 2. Get non-null properties and their JSON names
 
-                // 4. Serialize the sorted dictionary to JSON
-                var jsonOptions = new JsonSerializerOptions
-                {
-                    // Match PHP's JSON_UNESCAPED_UNICODE behavior
-                    //Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                    // Ensure compact output without indentation
-                    WriteIndented = false,
-
-                    // Important: Ensure the serializer respects the dictionary order (default behavior)
-                    // PropertyNamingPolicy = null // Not needed for Dictionary<string, object>
-                };
-                string jsonToSign = System.Text.Json.JsonSerializer.Serialize(response, jsonOptions);
+                string jsonToSign = HeleketJson.Serialize(response);
 
                 // 5. Base64 encode the JSON string (using UTF-8)
                 byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonToSign);

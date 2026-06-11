@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace Heleket.Models
 {
@@ -9,19 +8,19 @@ namespace Heleket.Models
     public class ConversionInfo
     {
         /// <summary>Gets or sets the target conversion currency.</summary>
-        [JsonPropertyName("to_currency")]
+        [JsonProperty("to_currency")]
         public string? ToCurrency { get; set; }
 
         /// <summary>Gets or sets the conversion commission.</summary>
-        [JsonPropertyName("commission")]
+        [JsonProperty("commission")]
         public string? Commission { get; set; }
 
         /// <summary>Gets or sets the conversion rate.</summary>
-        [JsonPropertyName("rate")]
+        [JsonProperty("rate")]
         public string? Rate { get; set; }
 
         /// <summary>Gets or sets the converted amount.</summary>
-        [JsonPropertyName("amount")]
+        [JsonProperty("amount")]
         public string? Amount { get; set; }
     }
 
@@ -31,88 +30,85 @@ namespace Heleket.Models
     public class WebhookPaymentResponse
     {
         /// <summary>Gets or sets the webhook type.</summary>
-        [JsonPropertyName("type")]
+        [JsonProperty("type")]
         public string? Type { get; set; }
 
         /// <summary>Gets or sets the Heleket payment UUID.</summary>
-        [JsonPropertyName("uuid")]
+        [JsonProperty("uuid")]
         public string? Uuid { get; set; }
 
         /// <summary>Gets or sets the merchant order identifier.</summary>
-        [JsonPropertyName("order_id")]
+        [JsonProperty("order_id")]
         public string? OrderId { get; set; }
 
         /// <summary>Gets or sets the invoice amount.</summary>
-        [JsonPropertyName("amount")]
+        [JsonProperty("amount")]
         public string? Amount { get; set; }
 
         /// <summary>Gets or sets the paid amount.</summary>
-        [JsonPropertyName("payment_amount")]
+        [JsonProperty("payment_amount")]
         public string? PaymentAmount { get; set; }
 
         /// <summary>Gets or sets the paid amount in USD.</summary>
-        [JsonPropertyName("payment_amount_usd")]
+        [JsonProperty("payment_amount_usd")]
         public string? PaymentAmountUsd { get; set; }
 
         /// <summary>Gets or sets the merchant amount.</summary>
-        [JsonPropertyName("merchant_amount")]
+        [JsonProperty("merchant_amount")]
         public string? MerchantAmount { get; set; }
 
         /// <summary>Gets or sets the commission.</summary>
-        [JsonPropertyName("commission")]
+        [JsonProperty("commission")]
         public string? Commission { get; set; }
 
         /// <summary>Gets or sets whether the webhook is final.</summary>
-        [JsonPropertyName("is_final")]
+        [JsonProperty("is_final")]
         public bool? IsFinal { get; set; }
 
         /// <summary>Gets or sets the payment status.</summary>
-        [JsonPropertyName("status")]
+        [JsonProperty("status")]
         public string? Status { get; set; }
 
         /// <summary>Gets or sets the sender address.</summary>
-        [JsonPropertyName("from")]
+        [JsonProperty("from")]
         public string? From { get; set; }
 
         /// <summary>Gets or sets the wallet address UUID.</summary>
-        [JsonPropertyName("wallet_address_uuid")]
+        [JsonProperty("wallet_address_uuid")]
         public string? WalletAddressUuid { get; set; }
 
         /// <summary>Gets or sets the network code.</summary>
-        [JsonPropertyName("network")]
+        [JsonProperty("network")]
         public string? Network { get; set; }
 
         /// <summary>Gets or sets the invoice currency code.</summary>
-        [JsonPropertyName("currency")]
+        [JsonProperty("currency")]
         public string? Currency { get; set; }
 
         /// <summary>Gets or sets the payer currency code.</summary>
-        [JsonPropertyName("payer_currency")]
+        [JsonProperty("payer_currency")]
         public string? PayerCurrency { get; set; }
 
         /// <summary>Gets or sets merchant-defined additional data.</summary>
-        [JsonPropertyName("additional_data")]
+        [JsonProperty("additional_data")]
         public string? AdditionalData { get; set; }
 
         /// <summary>Gets or sets conversion information.</summary>
-        [JsonPropertyName("convert")]
+        [JsonProperty("convert")]
         public ConversionInfo? Convert { get; set; }
 
         /// <summary>Gets or sets the transaction identifier.</summary>
-        [JsonPropertyName("txid")]
+        [JsonProperty("txid")]
         public string? Txid { get; set; }
 
         /// <summary>Gets or sets the received signature.</summary>
-        [JsonPropertyName("sign")]
+        [JsonProperty("sign")]
         public string? Sign { get; set; }
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return JsonSerializer.Serialize(this, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
+            return JsonConvert.SerializeObject(this, Formatting.Indented);
         }
     }
 
@@ -122,75 +118,75 @@ namespace Heleket.Models
     public class WebhookPaymentResponseNoSign(WebhookPaymentResponse webhook)
     {
         /// <summary>Gets or sets the webhook type.</summary>
-        [JsonPropertyName("type")]
+        [JsonProperty("type")]
         public string? Type { get; set; } = webhook.Type;
 
         /// <summary>Gets or sets the Heleket payment UUID.</summary>
-        [JsonPropertyName("uuid")]
+        [JsonProperty("uuid")]
         public string? Uuid { get; set; } = webhook.Uuid;
 
         /// <summary>Gets or sets the merchant order identifier.</summary>
-        [JsonPropertyName("order_id")]
+        [JsonProperty("order_id")]
         public string? OrderId { get; set; } = webhook.OrderId;
 
         /// <summary>Gets or sets the invoice amount.</summary>
-        [JsonPropertyName("amount")]
+        [JsonProperty("amount")]
         public string? Amount { get; set; } = webhook.Amount;
 
         /// <summary>Gets or sets the paid amount.</summary>
-        [JsonPropertyName("payment_amount")]
+        [JsonProperty("payment_amount")]
         public string? PaymentAmount { get; set; } = webhook.PaymentAmount;
 
         /// <summary>Gets or sets the paid amount in USD.</summary>
-        [JsonPropertyName("payment_amount_usd")]
+        [JsonProperty("payment_amount_usd")]
         public string? PaymentAmountUsd { get; set; } = webhook.PaymentAmountUsd;
 
         /// <summary>Gets or sets the merchant amount.</summary>
-        [JsonPropertyName("merchant_amount")]
+        [JsonProperty("merchant_amount")]
         public string? MerchantAmount { get; set; } = webhook.MerchantAmount;
 
         /// <summary>Gets or sets the commission.</summary>
-        [JsonPropertyName("commission")]
+        [JsonProperty("commission")]
         public string? Commission { get; set; } = webhook.Commission;
 
         /// <summary>Gets or sets whether the webhook is final.</summary>
-        [JsonPropertyName("is_final")]
+        [JsonProperty("is_final")]
         public bool? IsFinal { get; set; } = webhook.IsFinal;
 
         /// <summary>Gets or sets the payment status.</summary>
-        [JsonPropertyName("status")]
+        [JsonProperty("status")]
         public string? Status { get; set; } = webhook.Status;
 
         /// <summary>Gets or sets the sender address.</summary>
-        [JsonPropertyName("from")]
+        [JsonProperty("from")]
         public string? From { get; set; } = webhook.From;
 
         /// <summary>Gets or sets the wallet address UUID.</summary>
-        [JsonPropertyName("wallet_address_uuid")]
+        [JsonProperty("wallet_address_uuid")]
         public string? WalletAddressUuid { get; set; } = webhook.WalletAddressUuid;
 
         /// <summary>Gets or sets the network code.</summary>
-        [JsonPropertyName("network")]
+        [JsonProperty("network")]
         public string? Network { get; set; } = webhook.Network;
 
         /// <summary>Gets or sets the invoice currency code.</summary>
-        [JsonPropertyName("currency")]
+        [JsonProperty("currency")]
         public string? Currency { get; set; } = webhook.Currency;
 
         /// <summary>Gets or sets the payer currency code.</summary>
-        [JsonPropertyName("payer_currency")]
+        [JsonProperty("payer_currency")]
         public string? PayerCurrency { get; set; } = webhook.PayerCurrency;
 
         /// <summary>Gets or sets merchant-defined additional data.</summary>
-        [JsonPropertyName("additional_data")]
+        [JsonProperty("additional_data")]
         public string? AdditionalData { get; set; } = webhook.AdditionalData;
 
         /// <summary>Gets or sets conversion information.</summary>
-        [JsonPropertyName("convert")]
+        [JsonProperty("convert")]
         public ConversionInfo? Convert { get; set; } = webhook.Convert;
 
         /// <summary>Gets or sets the transaction identifier.</summary>
-        [JsonPropertyName("txid")]
+        [JsonProperty("txid")]
         public string? Txid { get; set; } = webhook.Txid;
     }
 }

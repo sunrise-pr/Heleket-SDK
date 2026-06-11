@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace Heleket.Payments;
 
@@ -8,10 +8,10 @@ namespace Heleket.Payments;
 public sealed class GetPaymentInfoRequest
 {
     /// <summary>Gets the Heleket payment UUID.</summary>
-    [JsonPropertyName("uuid")]
+    [JsonProperty("uuid")]
     public string? Uuid { get; init; }
 
     /// <summary>Gets the merchant order identifier.</summary>
-    [JsonPropertyName("order_id")]
+    [JsonProperty("order_id")]
     public string? OrderId { get; init; }
 }

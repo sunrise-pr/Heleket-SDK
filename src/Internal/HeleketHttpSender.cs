@@ -1,20 +1,19 @@
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.Json;
+using Flurl.Http;
+using Flurl.Http.Configuration;
 using Heleket.Options;
 using Heleket.Services;
-
+using System.Net;
 namespace Heleket.Internal;
 
 internal sealed class HeleketHttpSender
 {
-    private readonly HttpClient _httpClient;
+    private readonly IFlurlClientCache _clientCache;
     private readonly HeleketOptions _options;
     private readonly IHeleketSigner _signer;
 
-    public HeleketHttpSender(HttpClient httpClient, HeleketOptions options, IHeleketSigner signer)
+    public HeleketHttpSender(IFlurlClientCache clientCache, HeleketOptions options, IHeleketSigner signer)
     {
-        _httpClient = httpClient;
+        _clientCache = clientCache;
         _options = options;
         _signer = signer;
     }
@@ -34,29 +33,41 @@ internal sealed class HeleketHttpSender
         CancellationToken cancellationToken)
     {
         var json = HeleketJson.Serialize(request);
-        using var message = new HttpRequestMessage(HttpMethod.Post, BuildUri(path));
-        message.Headers.TryAddWithoutValidation("merchant", _options.MerchantId);
-        message.Headers.TryAddWithoutValidation("sign", _signer.SignJson(json, apiKey));
-        message.Content = new StringContent(json, Encoding.UTF8, "application/json");
-        message.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
-        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            throw new HeleketApiException(response.StatusCode, responseBody);
+            var client = _clientCache.GetOrAdd(
+                $"heleket:{_options.BaseUrl}",
+                _options.BaseUrl,
+                builder => builder.ConfigureHttpClient(httpClient => httpClient.BaseAddress = new Uri(_options.BaseUrl)));
+
+            var response = await client
+                .Request(path)
+                .WithHeaders(new
+                {
+                    merchant = _options.MerchantId,
+                    sign = _signer.SignJson(json, apiKey)
+                })
+                .WithSettings(settings => settings.JsonSerializer = HeleketJson.FlurlSerializer)
+                .PostJsonAsync(request, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+
+            var responseBody = await response.GetStringAsync().ConfigureAwait(false);
+            var envelope = HeleketJson.Deserialize<HeleketResponse<T>>(responseBody);
+
+            return envelope ?? throw new HeleketApiException(response.ResponseMessage.StatusCode, responseBody);
         }
+        catch (FlurlHttpException ex)
+        {
+            var responseBody = await ex.GetResponseStringAsync().ConfigureAwait(false) ?? string.Empty;
+            var statusCode = ex.Call.Response?.ResponseMessage.StatusCode ?? HttpStatusCode.InternalServerError;
+            var envelope = HeleketJson.Deserialize<HeleketResponse<T>>(responseBody);
+            if (envelope is not null)
+            {
+                return envelope;
+            }
 
-        var envelope = JsonSerializer.Deserialize<HeleketResponse<T>>(responseBody, HeleketJson.Options);
-        return envelope ?? throw new HeleketApiException(response.StatusCode, responseBody);
-    }
-
-    private Uri BuildUri(string path)
-    {
-        var baseUrl = _options.BaseUrl.EndsWith("/", StringComparison.Ordinal)
-            ? _options.BaseUrl
-            : _options.BaseUrl + "/";
-
-        return new Uri(new Uri(baseUrl), path);
+            throw new HeleketApiException(statusCode, responseBody);
+        }
     }
 }

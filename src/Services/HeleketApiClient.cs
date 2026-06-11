@@ -1,4 +1,4 @@
-﻿using Flurl; // Required for Url methods
+using Flurl; // Required for Url methods
 using Flurl.Http; // Required for Flurl HTTP extension methods
 using Flurl.Http.Configuration;
 using Heleket.Internal;
@@ -6,8 +6,6 @@ using Heleket.Models;
 using Heleket.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
-using System.Text.Json;
 namespace Heleket.Services
 {
     /// <summary>
@@ -17,7 +15,6 @@ namespace Heleket.Services
     {
         private readonly HeleketOptions _options;
         private readonly ILogger<HeleketApiClient>? _logger;
-        private readonly JsonSerializerOptions _jsonSerializerOptions;
 
         /// <summary>
         /// Gets the configured payment API key compatibility alias.
@@ -43,8 +40,6 @@ namespace Heleket.Services
             _options = options.Value;
             _logger = logger;
 
-            _jsonSerializerOptions = HeleketJson.Options;
-
             if (string.IsNullOrWhiteSpace(_options.ApiRequestKey))
             {
                 _logger?.LogWarning("Heleket ApiRequestKey is not configured. API calls might fail if required.");
@@ -69,10 +64,10 @@ namespace Heleket.Services
                 };
 
                 var rt = await flurlRequest
-                    .WithHeaders(new { ContentType = "application/json", merchant = _options.MerchantId, sign = SignatureGenerator.GenerateRequestSignature(request, _options.ApiRequestKey) })
+                    .WithHeaders(new { merchant = _options.MerchantId, sign = SignatureGenerator.GenerateRequestSignature(request, _options.ApiRequestKey) })
                     .WithSettings(settings =>
                     {
-                        settings.JsonSerializer = new DefaultJsonSerializer(_jsonSerializerOptions);
+                        settings.JsonSerializer = HeleketJson.FlurlSerializer;
                     })
                     .PostJsonAsync(request, cancellationToken: cancellationToken);
 
@@ -124,23 +119,12 @@ namespace Heleket.Services
                                                       // ** Add Authentication Header if needed **
                                                       // .WithHeader("X-API-KEY", _options.ApiRequestKey); // Example if key needed per request
 
-                var settings_j = new JsonSerializerSettings
-                {
-                    NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
-                    StringEscapeHandling = StringEscapeHandling.EscapeNonAscii,
-                    Formatting = Formatting.None
-                };
-
-
-
-
                 // Configure serialization and make the request
                 var rt = await flurlRequest
-                    .WithHeaders(new { ContentType = "application/json", merchant = _options.MerchantId, sign = SignatureGenerator.GenerateRequestSignature(request, _options.ApiRequestKey) })
+                    .WithHeaders(new { merchant = _options.MerchantId, sign = SignatureGenerator.GenerateRequestSignature(request, _options.ApiRequestKey) })
                     .WithSettings(settings => // Configure serialization for this specific request
                     {
-                        // Use the pre-configured options
-                        settings.JsonSerializer = new DefaultJsonSerializer(_jsonSerializerOptions);
+                        settings.JsonSerializer = HeleketJson.FlurlSerializer;
 
                     })
                     .PostJsonAsync(request, cancellationToken: cancellationToken);

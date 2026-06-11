@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace Heleket.Payments;
 
@@ -8,22 +8,22 @@ namespace Heleket.Payments;
 public sealed class RefundPaymentRequest
 {
     /// <summary>Gets the Heleket payment UUID.</summary>
-    [JsonPropertyName("uuid")]
+    [JsonProperty("uuid")]
     public string? Uuid { get; init; }
 
     /// <summary>Gets the merchant order identifier.</summary>
-    [JsonPropertyName("order_id")]
+    [JsonProperty("order_id")]
     public string? OrderId { get; init; }
 
     /// <summary>Gets the destination refund address.</summary>
-    [JsonPropertyName("address")]
+    [JsonProperty("address")]
     public required string Address { get; init; }
 
     /// <summary>Gets whether refund fees should be subtracted from the refund amount.</summary>
-    [JsonPropertyName("is_subtract")]
+    [JsonProperty("is_subtract")]
     public required bool IsSubtract { get; init; }
 
     /// <summary>Gets the optional refund amount as a string wire value.</summary>
-    [JsonPropertyName("amount")]
+    [JsonProperty("amount")]
     public string? Amount { get; init; }
 }

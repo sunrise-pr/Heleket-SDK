@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace Heleket.Models
 {
@@ -11,11 +10,11 @@ namespace Heleket.Models
     public class CurrencyInfo(string currency, string? network)
     {
         /// <summary>Gets or sets the currency code.</summary>
-        [JsonPropertyName("currency")]
+        [JsonProperty("currency")]
         public string Currency { get; set; } = currency;
 
         /// <summary>Gets or sets the optional network code.</summary>
-        [JsonPropertyName("network")]
+        [JsonProperty("network")]
         public string? Network { get; set; } = network;
     }
 }

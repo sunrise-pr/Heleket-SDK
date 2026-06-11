@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace Heleket.Models
 {
@@ -8,55 +8,55 @@ namespace Heleket.Models
     public class CreateInvoiceInnerResult
     {
         /// <summary>Gets or sets the Heleket payment UUID.</summary>
-        [JsonPropertyName("uuid")]
+        [JsonProperty("uuid")]
         public string? Uuid { get; set; }
 
         /// <summary>Gets or sets the merchant order identifier.</summary>
-        [JsonPropertyName("order_id")]
+        [JsonProperty("order_id")]
         public string? OrderId { get; set; }
 
         /// <summary>Gets or sets the invoice amount as a string wire value.</summary>
-        [JsonPropertyName("amount")]
+        [JsonProperty("amount")]
         public string? Amount { get; set; }
 
         /// <summary>Gets or sets the payment amount as a string wire value.</summary>
-        [JsonPropertyName("payment_amount")]
+        [JsonProperty("payment_amount")]
         public string? PaymentAmount { get; set; }
 
         /// <summary>Gets or sets the payer amount as a string wire value.</summary>
-        [JsonPropertyName("payer_amount")]
+        [JsonProperty("payer_amount")]
         public string? PayerAmount { get; set; }
 
         /// <summary>Gets or sets the payer currency code.</summary>
-        [JsonPropertyName("payer_currency")]
+        [JsonProperty("payer_currency")]
         public string? PayerCurrency { get; set; }
 
         /// <summary>Gets or sets the invoice currency code.</summary>
-        [JsonPropertyName("currency")]
+        [JsonProperty("currency")]
         public string? Currency { get; set; }
 
         /// <summary>Gets or sets the sender address.</summary>
-        [JsonPropertyName("from")]
+        [JsonProperty("from")]
         public string? From { get; set; }
 
         /// <summary>Gets or sets the transaction identifier.</summary>
-        [JsonPropertyName("txid")]
+        [JsonProperty("txid")]
         public string? Txid { get; set; }
 
         /// <summary>Gets or sets the payment status.</summary>
-        [JsonPropertyName("payment_status")]
+        [JsonProperty("payment_status")]
         public string? PaymentStatus { get; set; }
 
         /// <summary>Gets or sets the hosted invoice URL.</summary>
-        [JsonPropertyName("url")]
+        [JsonProperty("url")]
         public string? Url { get; set; }
 
         /// <summary>Gets or sets the invoice expiration timestamp.</summary>
-        [JsonPropertyName("expired_at")]
+        [JsonProperty("expired_at")]
         public int? ExpiredAt { get; set; }
 
         /// <summary>Gets or sets whether the payment is final.</summary>
-        [JsonPropertyName("is_final")]
+        [JsonProperty("is_final")]
         public bool? IsFinal { get; set; }
     }
 
@@ -66,15 +66,15 @@ namespace Heleket.Models
     public class CreateInvoiceResponse
     {
         /// <summary>Gets or sets the Heleket response state.</summary>
-        [JsonPropertyName("state")]
+        [JsonProperty("state")]
         public int? State { get; set; }
 
         /// <summary>Gets or sets the typed invoice result.</summary>
-        [JsonPropertyName("result")]
+        [JsonProperty("result")]
         public CreateInvoiceInnerResult? Result { get; set; }
 
         /// <summary>Gets or sets an error message when available.</summary>
-        [JsonPropertyName("message")]
+        [JsonProperty("message")]
         public string? Message { get; set; }
     }
 }

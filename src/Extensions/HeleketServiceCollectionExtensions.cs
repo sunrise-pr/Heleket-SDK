@@ -1,11 +1,10 @@
-﻿using Heleket.Options;
+using Flurl.Http.Configuration;
+using Heleket.Options;
 using Heleket.Payments;
 using Heleket.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options; // Required for AddHttpClient configuration and base options extensions
-using System;
-using System.Net.Http.Headers;
+using Microsoft.Extensions.Options;
 namespace Heleket.Extensions
 {
     /// <summary>
@@ -49,28 +48,10 @@ namespace Heleket.Extensions
             // 1. Configure and Validate Options
             // Binds configuration section to HeleketOptions and adds it to DI
             services.AddOptions<HeleketOptions>()
-                 .Bind(configuration.GetSection(configurationSectionName)) // Теперь должно работать
-                 //.ValidateDataAnnotations() // Использует атрибуты валидации в HeleketOptions
+                 .Bind(configuration.GetSection(configurationSectionName))
                  .Validate(ValidateOptions, "Heleket options are invalid.");
 
             AddCoreServices(services);
-
-            // 2. Register HttpClient for the API Client...
-            //services.AddHttpClient<IHeleketApiClient, HeleketApiClient>((serviceProvider, client) =>
-            //{
-            //    // ... (конфигурация HttpClient как раньше) ...
-            //    var heleketOptions = serviceProvider.GetRequiredService<IOptions<HeleketOptions>>().Value;
-            //    client.BaseAddress = new Uri(heleketOptions.BaseApiUrl);
-            //    client.DefaultRequestHeaders.Accept.Clear();
-            //    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            //    // ... (добавление заголовков авторизации, если нужно) ...
-            //});
-
-            // Add policies like Polly for resilience (timeouts, retries) if needed:
-            // .AddPolicyHandler(...)
-
-            // You could also register the Options class itself if needed directly elsewhere
-            // services.AddSingleton(resolver => resolver.GetRequiredService<IOptions<HeleketOptions>>().Value);
 
             return services;
         }
@@ -78,15 +59,17 @@ namespace Heleket.Extensions
         private static void AddCoreServices(IServiceCollection services)
         {
             services.AddScoped<IHeleketApiClient, HeleketApiClient>();
+            services.AddSingleton<IFlurlClientCache, FlurlClientCache>();
             services.AddSingleton<IHeleketSigner, HeleketSigner>();
             services.AddSingleton<IHeleketWebhookValidator, HeleketWebhookValidator>();
             services.AddScoped<IHeleketWebhookVerifier, HeleketWebhookVerifier>();
             services.AddScoped<IHeleketClient>(serviceProvider =>
             {
                 var options = serviceProvider.GetRequiredService<IOptions<HeleketOptions>>().Value;
+                var clientCache = serviceProvider.GetRequiredService<IFlurlClientCache>();
                 var signer = serviceProvider.GetRequiredService<IHeleketSigner>();
                 var validator = serviceProvider.GetRequiredService<IHeleketWebhookValidator>();
-                return new HeleketClient(options, new HttpClient(), signer, validator);
+                return new HeleketClient(options, clientCache, signer, validator);
             });
             services.AddScoped(serviceProvider => serviceProvider.GetRequiredService<IHeleketClient>().Payments);
             services.AddScoped(serviceProvider => serviceProvider.GetRequiredService<IHeleketClient>().Webhooks);

@@ -1,6 +1,5 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
 
 namespace Heleket.Models
 {
@@ -28,20 +27,17 @@ namespace Heleket.Models
         /// Gets or sets the invoice amount as a string wire value.
         /// </summary>
         [JsonProperty("amount")]
-        [JsonPropertyName("amount")]
         public string Amount { get; set; }
 
         /// <summary>
         /// Gets or sets the invoice currency code.
         /// </summary>
         [JsonProperty("currency")]
-        [JsonPropertyName("currency")]
         public string Currency { get; set; }
 
         /// <summary>
         /// Gets or sets the merchant order identifier.
         /// </summary>
-        [JsonPropertyName("order_id")]
         [JsonProperty("order_id")]
         [StringLength(128, MinimumLength = 1)]
         public string OrderId { get; set; }
@@ -49,13 +45,13 @@ namespace Heleket.Models
         /// <summary>
         /// Gets or sets the optional webhook callback URL.
         /// </summary>
+        [JsonProperty("url_callback")]
         [StringLength(255, MinimumLength = 6)]
         public string? UrlCallback { get; set; }
 
         /// <summary>
         /// Gets or sets the optional target cryptocurrency for conversion.
         /// </summary>
-        [JsonPropertyName("to_currency")]
         [JsonProperty("to_currency")]
         public string? ToCurrency { get; set; }
     }

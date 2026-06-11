@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
-using System.Text.Json;
 using Heleket.Internal;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Heleket.Services;
 
@@ -29,22 +30,17 @@ public sealed class HeleketWebhookValidator : IHeleketWebhookValidator
         }
 
         string receivedSign;
-        var payloadWithoutSign = new Dictionary<string, JsonElement>();
+        JObject payloadWithoutSign;
 
         try
         {
-            using var document = JsonDocument.Parse(rawBody);
-            if (document.RootElement.ValueKind != JsonValueKind.Object)
-            {
-                return false;
-            }
-
-            if (!TryExtractPayload(document.RootElement, payloadWithoutSign, out receivedSign))
+            var root = JObject.Parse(rawBody);
+            if (!TryExtractPayload(root, out payloadWithoutSign, out receivedSign))
             {
                 return false;
             }
         }
-        catch (JsonException)
+        catch (JsonReaderException)
         {
             return false;
         }
@@ -56,28 +52,29 @@ public sealed class HeleketWebhookValidator : IHeleketWebhookValidator
     }
 
     private static bool TryExtractPayload(
-        JsonElement root,
-        Dictionary<string, JsonElement> payloadWithoutSign,
+        JObject root,
+        out JObject payloadWithoutSign,
         out string receivedSign)
     {
+        payloadWithoutSign = new JObject();
         receivedSign = string.Empty;
         var signFound = false;
 
-        foreach (var property in root.EnumerateObject())
+        foreach (var property in root.Properties())
         {
-            if (property.NameEquals("sign"))
+            if (property.Name == "sign")
             {
-                if (property.Value.ValueKind != JsonValueKind.String)
+                if (property.Value.Type != JTokenType.String)
                 {
                     return false;
                 }
 
-                receivedSign = property.Value.GetString() ?? string.Empty;
+                receivedSign = property.Value.Value<string>() ?? string.Empty;
                 signFound = !string.IsNullOrWhiteSpace(receivedSign);
                 continue;
             }
 
-            payloadWithoutSign[property.Name] = property.Value.Clone();
+            payloadWithoutSign[property.Name] = property.Value.DeepClone();
         }
 
         return signFound;

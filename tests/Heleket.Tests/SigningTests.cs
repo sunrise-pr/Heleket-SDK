@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 using Heleket.Services;
 using Xunit;
 
@@ -37,16 +37,16 @@ public sealed class SigningTests
 
     private sealed class SigningRequest
     {
-        [JsonPropertyName("amount")]
+        [JsonProperty("amount")]
         public required string Amount { get; init; }
 
-        [JsonPropertyName("currency")]
+        [JsonProperty("currency")]
         public required string Currency { get; init; }
 
-        [JsonPropertyName("order_id")]
+        [JsonProperty("order_id")]
         public required string OrderId { get; init; }
 
-        [JsonPropertyName("url_callback")]
+        [JsonProperty("url_callback")]
         public string? UrlCallback { get; init; }
     }
 }

@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace Heleket;
 
@@ -11,25 +11,25 @@ public sealed class HeleketResponse<T>
     /// <summary>
     /// Gets the Heleket response state. A value of 0 indicates success.
     /// </summary>
-    [JsonPropertyName("state")]
+    [JsonProperty("state")]
     public int State { get; init; }
 
     /// <summary>
     /// Gets the typed result payload when available.
     /// </summary>
-    [JsonPropertyName("result")]
+    [JsonProperty("result")]
     public T? Result { get; init; }
 
     /// <summary>
     /// Gets the error message returned by Heleket when available.
     /// </summary>
-    [JsonPropertyName("message")]
+    [JsonProperty("message")]
     public string? Message { get; init; }
 
     /// <summary>
     /// Gets field-level validation errors returned by Heleket when available.
     /// </summary>
-    [JsonPropertyName("errors")]
+    [JsonProperty("errors")]
     public Dictionary<string, string[]>? Errors { get; init; }
 
     /// <summary>
