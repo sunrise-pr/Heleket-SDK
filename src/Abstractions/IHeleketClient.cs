@@ -11,6 +11,11 @@ public interface IHeleketClient
     IHeleketPaymentsClient Payments { get; }
 
     /// <summary>
+    /// Gets balance API operations.
+    /// </summary>
+    IHeleketBalanceClient Balance { get; }
+
+    /// <summary>
     /// Gets webhook validation helpers.
     /// </summary>
     IHeleketWebhooksClient Webhooks { get; }

@@ -1,5 +1,5 @@
 using Newtonsoft.Json;
-using Heleket.Services;
+using Heleket.Signing;
 using Xunit;
 
 namespace Heleket.Tests;

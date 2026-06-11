@@ -23,16 +23,18 @@ internal sealed class HeleketHttpSender
     public async Task<HeleketResponse<T>> PostPaymentAsync<T>(
         string path,
         object request,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? cursor = null)
     {
-        return await PostAsync<T>(path, request, _options.PaymentApiKey!, cancellationToken).ConfigureAwait(false);
+        return await PostAsync<T>(path, request, _options.PaymentApiKey!, cancellationToken, cursor).ConfigureAwait(false);
     }
 
     private async Task<HeleketResponse<T>> PostAsync<T>(
         string path,
         object request,
         string apiKey,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? cursor = null)
     {
         var json = HeleketJson.Serialize(request);
 
@@ -43,8 +45,13 @@ internal sealed class HeleketHttpSender
                 _options.BaseUrl,
                 builder => builder.ConfigureHttpClient(httpClient => httpClient.BaseAddress = new Uri(_options.BaseUrl)));
 
-            var response = await client
-                .Request(path)
+            var httpRequest = client.Request(path);
+            if (!string.IsNullOrWhiteSpace(cursor))
+            {
+                httpRequest = httpRequest.SetQueryParam("cursor", cursor);
+            }
+
+            var response = await httpRequest
                 .WithHeaders(new
                 {
                     merchant = _options.MerchantId,

@@ -1,12 +1,15 @@
 using System.Reflection;
 using Flurl.Http.Testing;
-using Heleket;
-using Heleket.Models;
-using Heleket.Options;
-using Heleket.Payments;
-using Heleket.Services;
+using Heleket.Abstractions;
+using Heleket.Balance.Responses;
+using Heleket.Client;
+using Heleket.Common;
+using Heleket.Configuration;
+using Heleket.Legacy;
+using Heleket.Payments.Requests;
+using Heleket.Payments.Responses;
+using Heleket.Signing;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace Heleket.Tests;
@@ -115,6 +118,169 @@ public sealed class PaymentClientTests
     }
 
     [Fact]
+    public async Task GetServicesAsync_SendsEmptyObjectAndDeserializesServices()
+    {
+        using var httpTest = new HttpTest();
+        httpTest.RespondWith(PaymentServicesSuccessJson);
+        var client = CreateClient();
+
+        var response = await client.Payments.GetServicesAsync();
+
+        const string expectedBody = "{}";
+
+        Assert.True(response.IsSuccess);
+        var service = Assert.Single(response.Result!);
+        Assert.Equal("USDT", service.Currency);
+        Assert.Equal("tron", service.Network);
+        Assert.Equal("1.00", service.Limit!.MinAmount);
+        Assert.Equal("value", service.ExtensionData!["future_field"].ToObject<string>());
+
+        var call = httpTest.CallLog.Single();
+        Assert.Equal(expectedBody, call.RequestBody);
+        httpTest.ShouldHaveCalled("https://api.test/v1/payment/services")
+            .WithVerb(HttpMethod.Post)
+            .WithHeader("merchant", "merchant-id")
+            .WithHeader("sign", new HeleketSigner().SignJson(expectedBody, "payment-secret"))
+            .WithHeader("Content-Type", "application/json*")
+            .Times(1);
+    }
+
+    [Fact]
+    public async Task GetHistoryAsync_SendsCursorAndDeserializesPagination()
+    {
+        using var httpTest = new HttpTest();
+        httpTest.RespondWith(PaymentHistorySuccessJson);
+        var client = CreateClient();
+
+        var response = await client.Payments.GetHistoryAsync(
+            new PaymentHistoryRequest
+            {
+                DateFrom = "2026-06-01 00:00:00",
+                DateTo = "2026-06-11 23:59:59"
+            },
+            "cursor-2");
+
+        const string expectedBody = "{\"date_from\":\"2026-06-01 00:00:00\",\"date_to\":\"2026-06-11 23:59:59\"}";
+
+        Assert.True(response.IsSuccess);
+        Assert.Equal("next-3", response.Result!.Pagination!.NextCursor);
+        Assert.Equal(50, response.Result.Pagination.PerPage);
+        var payment = Assert.Single(response.Result.Items);
+        Assert.Equal("history-order", payment.OrderId);
+
+        var call = httpTest.CallLog.Single();
+        Assert.Equal(expectedBody, call.RequestBody);
+        httpTest.ShouldHaveCalled("https://api.test/v1/payment/list?cursor=cursor-2")
+            .WithVerb(HttpMethod.Post)
+            .WithHeader("merchant", "merchant-id")
+            .WithHeader("sign", new HeleketSigner().SignJson(expectedBody, "payment-secret"))
+            .WithHeader("Content-Type", "application/json*")
+            .Times(1);
+    }
+
+    [Fact]
+    public async Task BalanceGetAsync_SendsEmptyObjectAndDeserializesBalance()
+    {
+        using var httpTest = new HttpTest();
+        httpTest.RespondWith(BalanceSuccessJson);
+        var client = CreateClient();
+
+        var response = await client.Balance.GetAsync();
+
+        const string expectedBody = "{}";
+
+        Assert.True(response.IsSuccess);
+        var balance = Assert.Single(response.Result!.Balances!);
+        Assert.Equal("USDT", balance.Currency);
+        Assert.Equal("100.50", balance.Balance);
+        Assert.Equal("value", response.Result.ExtensionData!["future_field"].ToObject<string>());
+
+        var call = httpTest.CallLog.Single();
+        Assert.Equal(expectedBody, call.RequestBody);
+        httpTest.ShouldHaveCalled("https://api.test/v1/balance")
+            .WithVerb(HttpMethod.Post)
+            .WithHeader("merchant", "merchant-id")
+            .WithHeader("sign", new HeleketSigner().SignJson(expectedBody, "payment-secret"))
+            .WithHeader("Content-Type", "application/json*")
+            .Times(1);
+    }
+
+    [Fact]
+    public async Task ResendWebhookAsync_SendsDocumentedSnakeCaseBodyAndHeaders()
+    {
+        using var httpTest = new HttpTest();
+        httpTest.RespondWith(ResendWebhookSuccessJson);
+        var client = CreateClient();
+
+        var response = await client.Payments.ResendWebhookAsync(new ResendPaymentWebhookRequest
+        {
+            Uuid = "payment-uuid",
+            OrderId = "order_123"
+        });
+
+        const string expectedBody = "{\"uuid\":\"payment-uuid\",\"order_id\":\"order_123\"}";
+
+        Assert.True(response.IsSuccess);
+        Assert.True(response.Result!.IsSent);
+        Assert.Equal("accepted", response.Result.Message);
+        Assert.Equal("value", response.Result.ExtensionData!["future_field"].ToObject<string>());
+
+        var call = httpTest.CallLog.Single();
+        Assert.Equal(expectedBody, call.RequestBody);
+        httpTest.ShouldHaveCalled("https://api.test/v1/payment/resend-webhook")
+            .WithVerb(HttpMethod.Post)
+            .WithHeader("merchant", "merchant-id")
+            .WithHeader("sign", new HeleketSigner().SignJson(expectedBody, "payment-secret"))
+            .WithHeader("Content-Type", "application/json*")
+            .Times(1);
+    }
+
+    [Fact]
+    public async Task SendTestWebhookAsync_SendsDocumentedSnakeCaseBodyAndHeaders()
+    {
+        using var httpTest = new HttpTest();
+        httpTest.RespondWith(TestWebhookSuccessJson);
+        var client = CreateClient();
+
+        var response = await client.Payments.SendTestWebhookAsync(new TestPaymentWebhookRequest
+        {
+            OrderId = "order_123",
+            UrlCallback = "https://example.com/hooks/heleket"
+        });
+
+        const string expectedBody = "{\"order_id\":\"order_123\",\"url_callback\":\"https://example.com/hooks/heleket\"}";
+
+        Assert.True(response.IsSuccess);
+        Assert.True(response.Result!.IsSent);
+        Assert.Equal("accepted", response.Result.Message);
+        Assert.Equal("test-value", response.Result.ExtensionData!["future_field"].ToObject<string>());
+
+        var call = httpTest.CallLog.Single();
+        Assert.Equal(expectedBody, call.RequestBody);
+        httpTest.ShouldHaveCalled("https://api.test/v1/payment/test-webhook")
+            .WithVerb(HttpMethod.Post)
+            .WithHeader("merchant", "merchant-id")
+            .WithHeader("sign", new HeleketSigner().SignJson(expectedBody, "payment-secret"))
+            .WithHeader("Content-Type", "application/json*")
+            .Times(1);
+    }
+
+    [Fact]
+    public async Task ResendWebhookAsync_ApiErrorEnvelopeIsReturned()
+    {
+        using var httpTest = new HttpTest();
+        httpTest.RespondWith(ApiErrorEnvelopeJson, status: 422);
+        var client = CreateClient();
+
+        var response = await client.Payments.ResendWebhookAsync(new ResendPaymentWebhookRequest());
+
+        Assert.False(response.IsSuccess);
+        Assert.Equal(1, response.State);
+        Assert.Equal("validation.required_without", response.Errors!["uuid"][0]);
+        Assert.Equal("validation.required_without", response.Errors["order_id"][0]);
+    }
+
+    [Fact]
     public async Task ApiErrorEnvelope_IsReturnedForDocumentedValidationError()
     {
         using var httpTest = new HttpTest();
@@ -139,7 +305,7 @@ public sealed class PaymentClientTests
         Assert.Null(response.Result!.Comments);
         Assert.Null(response.Result.From);
         Assert.Null(response.Result.Txid);
-        Assert.Equal("value", response.Result.ExtensionData!["future_field"].Value<string>());
+        Assert.Equal("value", response.Result.ExtensionData!["future_field"].ToObject<string>());
     }
 
     [Fact]
@@ -150,7 +316,13 @@ public sealed class PaymentClientTests
             typeof(CreatePaymentRequest),
             typeof(HeleketPayment),
             typeof(RefundPaymentRequest),
-            typeof(RefundPaymentResponse)
+            typeof(RefundPaymentResponse),
+            typeof(ResendPaymentWebhookRequest),
+            typeof(ResendPaymentWebhookResult),
+            typeof(TestPaymentWebhookRequest),
+            typeof(TestPaymentWebhookResult),
+            typeof(PaymentService),
+            typeof(BalanceAccount)
         };
 
         var doubleAmountProperties = dtoTypes
@@ -260,6 +432,91 @@ public sealed class PaymentClientTests
           "errors": {
             "uuid": ["validation.required_without"],
             "order_id": ["validation.required_without"]
+          }
+        }
+        """;
+
+    private const string PaymentServicesSuccessJson = """
+        {
+          "state": 0,
+          "result": [
+            {
+              "currency": "USDT",
+              "network": "tron",
+              "method": "USDT_TRON",
+              "is_available": true,
+              "limit": {
+                "min_amount": "1.00",
+                "max_amount": "100000.00",
+                "step": "0.01"
+              },
+              "future_field": "value"
+            }
+          ]
+        }
+        """;
+
+    private const string PaymentHistorySuccessJson = """
+        {
+          "state": 0,
+          "result": {
+            "items": [
+              {
+                "uuid": "history-uuid",
+                "order_id": "history-order",
+                "amount": "15.00",
+                "currency": "USDT",
+                "status": "paid",
+                "is_final": true
+              }
+            ],
+            "paginate": {
+              "count": 1,
+              "hasPages": true,
+              "nextCursor": "next-3",
+              "previousCursor": "prev-1",
+              "perPage": 50
+            }
+          }
+        }
+        """;
+
+    private const string BalanceSuccessJson = """
+        {
+          "state": 0,
+          "result": {
+            "balances": [
+              {
+                "currency": "USDT",
+                "network": "tron",
+                "balance": "100.50",
+                "available": "90.25",
+                "hold": "10.25"
+              }
+            ],
+            "future_field": "value"
+          }
+        }
+        """;
+
+    private const string ResendWebhookSuccessJson = """
+        {
+          "state": 0,
+          "result": {
+            "is_sent": true,
+            "message": "accepted",
+            "future_field": "value"
+          }
+        }
+        """;
+
+    private const string TestWebhookSuccessJson = """
+        {
+          "state": 0,
+          "result": {
+            "is_sent": true,
+            "message": "accepted",
+            "future_field": "test-value"
           }
         }
         """;

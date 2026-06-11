@@ -5,9 +5,13 @@
 - create payment invoices
 - get payment information
 - refund payments
+- list payment services
+- list payment history
+- resend and test payment webhooks
+- read balances
 - validate payment and payout webhook signatures
 
-Non-MVP endpoint families such as static wallets, QR generation, payment history, payouts, transfers, discounts, exchange rates, balance, and reference methods are not implemented yet.
+Non-MVP endpoint families such as static wallets, QR generation, payouts, transfers, discounts, exchange rates, and reference methods are not implemented yet.
 
 ## Install
 
@@ -18,9 +22,9 @@ dotnet add package Heleket.Sdk
 ## Plain C# Usage
 
 ```csharp
-using Heleket;
-using Heleket.Options;
-using Heleket.Payments;
+using Heleket.Client;
+using Heleket.Configuration;
+using Heleket.Payments.Requests;
 
 var client = new HeleketClient(new HeleketOptions
 {
@@ -33,8 +37,7 @@ var client = new HeleketClient(new HeleketOptions
 ## ASP.NET Core DI
 
 ```csharp
-using Heleket;
-using Heleket.Extensions;
+using Heleket.DependencyInjection;
 
 builder.Services.AddHeleket(options =>
 {
@@ -89,16 +92,74 @@ var response = await client.Payments.RefundAsync(new RefundPaymentRequest
 }, cancellationToken);
 ```
 
+## Payment Services
+
+```csharp
+var response = await client.Payments.GetServicesAsync(cancellationToken);
+
+if (response.IsSuccess)
+{
+    foreach (var service in response.Result ?? [])
+    {
+        Console.WriteLine($"{service.Currency} {service.Network}");
+    }
+}
+```
+
+## Payment History
+
+```csharp
+var response = await client.Payments.GetHistoryAsync(new PaymentHistoryRequest
+{
+    DateFrom = "2026-06-01 00:00:00",
+    DateTo = "2026-06-11 23:59:59"
+}, cursor: null, cancellationToken);
+
+var nextCursor = response.Result?.Pagination?.NextCursor;
+```
+
+## Balance
+
+```csharp
+var response = await client.Balance.GetAsync(cancellationToken);
+var balances = response.Result?.Balances;
+```
+
+## Operational Webhook Helpers
+
+```csharp
+await client.Payments.ResendWebhookAsync(new ResendPaymentWebhookRequest
+{
+    OrderId = "order_123"
+}, cancellationToken);
+
+await client.Payments.SendTestWebhookAsync(new TestPaymentWebhookRequest
+{
+    OrderId = "order_123",
+    UrlCallback = "https://example.com/webhooks/heleket"
+}, cancellationToken);
+```
+
 ## Webhook Validation
 
 Validate the raw request body before trusting parsed webhook fields.
 
 ```csharp
+using Heleket.Webhooks.Models;
+using Newtonsoft.Json;
+
 var rawBody = await new StreamReader(Request.Body).ReadToEndAsync();
 
 if (!client.Webhooks.ValidatePayment(rawBody))
 {
     return Results.BadRequest();
+}
+
+var webhook = JsonConvert.DeserializeObject<HeleketPaymentWebhook>(rawBody);
+
+if (webhook?.Status?.IsSuccessfulFinal(webhook.IsFinal == true) == true)
+{
+    // activate the order
 }
 
 return Results.Ok();
@@ -107,7 +168,9 @@ return Results.Ok();
 For low-level usage, pass the API key explicitly:
 
 ```csharp
-using Heleket.Services;
+using Heleket.Abstractions;
+using Heleket.Signing;
+using Heleket.Webhooks.Validation;
 
 IHeleketWebhookValidator validator = new HeleketWebhookValidator(new HeleketSigner());
 var isValid = validator.Validate(rawBody, paymentApiKey);

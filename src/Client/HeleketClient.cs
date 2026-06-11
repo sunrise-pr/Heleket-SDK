@@ -35,11 +35,15 @@ public sealed class HeleketClient : IHeleketClient
 
         var sender = new HeleketHttpSender(clientCache, options, signer);
         Payments = new HeleketPaymentsClient(sender);
+        Balance = new HeleketBalanceClient(sender);
         Webhooks = new HeleketWebhooksClient(options, webhookValidator);
     }
 
     /// <inheritdoc />
     public IHeleketPaymentsClient Payments { get; }
+
+    /// <inheritdoc />
+    public IHeleketBalanceClient Balance { get; }
 
     /// <inheritdoc />
     public IHeleketWebhooksClient Webhooks { get; }

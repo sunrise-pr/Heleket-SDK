@@ -1,7 +1,9 @@
-using Heleket;
-using Heleket.Extensions;
-using Heleket.Options;
-using Heleket.Services;
+using Heleket.Abstractions;
+using Heleket.Client;
+using Heleket.Configuration;
+using Heleket.DependencyInjection;
+using Heleket.Signing;
+using Heleket.Webhooks.Validation;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 

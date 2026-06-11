@@ -41,4 +41,52 @@ internal sealed class HeleketPaymentsClient : IHeleketPaymentsClient
         ArgumentNullException.ThrowIfNull(request);
         return _sender.PostPaymentAsync<RefundPaymentResponse>("payment/refund", request, cancellationToken);
     }
+
+    /// <inheritdoc />
+    public Task<HeleketResponse<IReadOnlyList<PaymentService>>> GetServicesAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return _sender.PostPaymentAsync<IReadOnlyList<PaymentService>>(
+            "payment/services",
+            EmptyRequest.Instance,
+            cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<HeleketResponse<HeleketPage<HeleketPayment>>> GetHistoryAsync(
+        PaymentHistoryRequest request,
+        string? cursor = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        return _sender.PostPaymentAsync<HeleketPage<HeleketPayment>>(
+            "payment/list",
+            request,
+            cancellationToken,
+            cursor);
+    }
+
+    /// <inheritdoc />
+    public Task<HeleketResponse<ResendPaymentWebhookResult>> ResendWebhookAsync(
+        ResendPaymentWebhookRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        return _sender.PostPaymentAsync<ResendPaymentWebhookResult>(
+            "payment/resend-webhook",
+            request,
+            cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<HeleketResponse<TestPaymentWebhookResult>> SendTestWebhookAsync(
+        TestPaymentWebhookRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        return _sender.PostPaymentAsync<TestPaymentWebhookResult>(
+            "payment/test-webhook",
+            request,
+            cancellationToken);
+    }
 }

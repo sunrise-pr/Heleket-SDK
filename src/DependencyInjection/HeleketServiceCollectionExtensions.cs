@@ -74,6 +74,7 @@ namespace Heleket.DependencyInjection
                 var validator = serviceProvider.GetRequiredService<IHeleketWebhookValidator>();
                 return new HeleketClient(options, clientCache, signer, validator);
             });
+            services.AddScoped(serviceProvider => serviceProvider.GetRequiredService<IHeleketClient>().Balance);
             services.AddScoped(serviceProvider => serviceProvider.GetRequiredService<IHeleketClient>().Payments);
             services.AddScoped(serviceProvider => serviceProvider.GetRequiredService<IHeleketClient>().Webhooks);
         }
