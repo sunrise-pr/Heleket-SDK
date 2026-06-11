@@ -1,8 +1,10 @@
 using Flurl.Http;
 using Flurl.Http.Configuration;
-using Heleket.Options;
-using Heleket.Services;
+using Heleket.Abstractions;
+using Heleket.Common;
+using Heleket.Configuration;
 using System.Net;
+
 namespace Heleket.Internal;
 
 internal sealed class HeleketHttpSender
