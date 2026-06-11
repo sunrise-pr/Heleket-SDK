@@ -21,22 +21,16 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore Heleket.slnx
 
       - name: Test
-        run: dotnet test tests/Heleket.Tests/Heleket.Tests.csproj -c Release --no-restore
+        run: dotnet test Heleket.slnx -c Release --no-restore
 
       - name: Pack
         run: dotnet pack src/Heleket.csproj -c Release --no-restore -o artifacts
 
       - name: Publish package
-        run: |
-          dotnet nuget push "artifacts/*.nupkg" \
-            --source https://api.nuget.org/v3/index.json \
-            --skip-duplicate
+        run: dotnet nuget push artifacts/*.nupkg --source https://api.nuget.org/v3/index.json --skip-duplicate
 
       - name: Publish symbols
-        run: |
-          dotnet nuget push "artifacts/*.snupkg" \
-            --source https://api.nuget.org/v3/index.json \
-            --skip-duplicate
+        run: dotnet nuget push artifacts/*.snupkg --source https://api.nuget.org/v3/index.json --skip-duplicate

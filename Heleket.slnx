@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Heleket.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Heleket.Tests/Heleket.Tests.csproj" />
+  </Folder>
+</Solution>
