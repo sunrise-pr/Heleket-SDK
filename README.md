@@ -1,3 +1,5 @@
+[![NuGet](https://img.shields.io/nuget/v/Heleket.Sdk.svg)]
+
 # Heleket.Sdk
 
 .NET SDK for the MVP Heleket payment API surface:
