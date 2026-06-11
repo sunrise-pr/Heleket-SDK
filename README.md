@@ -1,4 +1,20 @@
-[![NuGet](https://img.shields.io/nuget/v/Heleket.Sdk.svg)]
+[![NuGet](https://img.shields.io/nuget/v/Heleket.Sdk.svg)](https://www.nuget.org/packages/Heleket.Sdk)
+
+Current release: v1.0.1
+
+Implemented:
+✓ Payments
+✓ Refunds
+✓ Payment history
+✓ Payment services
+✓ Balance
+✓ Webhook validation
+
+Planned:
+• Wallets
+• QR
+• Payouts
+• Transfers
 
 # Heleket.Sdk
 
